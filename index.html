@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tennis Oberperfuss – Spaß-Turnier</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow:   #d4e000;
+    --yellow-2: #c8d400;
+    --ink:      #1a1a1a;
+    --ink-2:    #444;
+    --ink-3:    #888;
+    --ink-4:    #bbb;
+    --line:     #e8e8e8;
+    --bg:       #f7f7f5;
+    --white:    #ffffff;
+    --green:    #2e9e4f;
+    --red:      #d94040;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    height: 72px;
+  }
+
+  .logo-svg { height: 44px; width: auto; }
+
+  .header-pill {
+    margin-left: auto;
+    background: var(--yellow);
+    color: var(--ink);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+  }
+
+  /* ── MAIN ────────────────────────────────── */
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── PAGE TITLE ──────────────────────────── */
+  .page-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    margin-bottom: 28px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── TABS ────────────────────────────────── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 32px;
+    gap: 0;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.87rem;
+    font-weight: 500;
+    color: var(--ink-3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+    letter-spacing: -0.01em;
+  }
+
+  .tab:hover { color: var(--ink-2); }
+
+  .tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--yellow-2);
+    font-weight: 600;
+  }
+
+  /* ── SECTION TITLE ───────────────────────── */
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 12px;
+  }
+
+  /* ── CARD ────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* ── INPUTS ──────────────────────────────── */
+  .input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+
+  input[type=text],
+  input[type=number] {
+    flex: 1;
+    padding: 9px 13px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    background: var(--white);
+    color: var(--ink);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+
+  input[type=text]::placeholder,
+  input[type=number]::placeholder { color: var(--ink-4); }
+
+  input:focus {
+    border-color: var(--ink-3);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+  }
+
+  /* ── BUTTONS ─────────────────────────────── */
+  button {
+    padding: 9px 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .12s;
+    letter-spacing: -0.01em;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--white);
+  }
+  .btn-primary:hover { background: #333; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-2);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { background: var(--bg); }
+
+  .btn-yellow {
+    background: var(--yellow);
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .btn-yellow:hover { background: var(--yellow-2); }
+
+  .btn-full {
+    width: 100%;
+    padding: 12px;
+    font-size: 0.93rem;
+    border-radius: 10px;
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 6px 10px;
+  }
+  .btn-danger:hover { background: rgba(217,64,64,0.07); border-radius: 6px; }
+
+  /* ── PLAYER CHIPS ────────────────────────── */
+  .players-wrap { display: flex; flex-wrap: wrap; gap: 6px; min-height: 38px; margin-top: 4px; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+    padding: 5px 10px 5px 12px;
+    border-radius: 100px;
+    font-size: 0.84rem;
+    font-weight: 500;
+  }
+
+  .chip-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink-4);
+    font-size: 0.7rem;
+    padding: 0;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .1s, color .1s;
+  }
+  .chip-remove:hover { background: var(--line); color: var(--ink-2); }
+
+  /* ── ROUND ───────────────────────────────── */
+  .round-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 10px;
+  }
+
+  .match-row {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+    background: var(--white);
+  }
+
+  .court-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    margin-bottom: 10px;
+  }
+
+  .match-teams {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .team-b { text-align: right; }
+
+  .player-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .serve-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: var(--yellow);
+    color: var(--ink);
+    padding: 1px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  .team-b .serve-tag { margin-left: 0; margin-right: 4px; }
+
+  .vs {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink-4);
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  .score-row input {
+    width: 56px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 7px;
+    flex: none;
+  }
+
+  .score-colon {
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--ink-4);
+  }
+
+  .score-ok {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--green);
+  }
+
+  .score-err {
+    font-size: 0.78rem;
+    color: var(--red);
+    margin-top: 4px;
+    min-height: 14px;
+  }
+
+  .bye-row {
+    font-size: 0.85rem;
+    color: var(--ink-3);
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    margin-top: 2px;
+  }
+
+  /* ── RANKING TABLE ───────────────────────── */
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  tbody td {
+    padding: 12px;
+    font-size: 0.88rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--bg); }
+
+  .rank-pos {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink-4);
+    width: 32px;
+  }
+
+  .rank-1 td.rank-pos { color: #c9920a; }
+  .rank-2 td.rank-pos { color: #888; }
+  .rank-3 td.rank-pos { color: #a07040; }
+
+  .pts { font-weight: 700; color: var(--ink); }
+  .ratio-col { color: var(--ink-3); font-size: 0.82rem; }
+
+  /* ── RULES ───────────────────────────────── */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .rule-box {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+  }
+
+  .rule-n {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    margin-bottom: 6px;
+  }
+
+  .rule-t {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .rule-d {
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .info-strip {
+    margin-top: 12px;
+    padding: 16px;
+    background: var(--ink);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .info-strip strong {
+    display: block;
+    color: var(--yellow);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* ── MISC ────────────────────────────────── */
+  .divider { height: 1px; background: var(--line); margin: 20px 0; }
+
+  .helper {
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .preview-box {
+    font-size: 0.83rem;
+    color: var(--ink-3);
+    padding: 10px 13px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    margin-bottom: 14px;
+    min-height: 36px;
+    line-height: 1.5;
+  }
+
+  .alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    margin-top: 10px;
+    font-weight: 500;
+  }
+  .alert-warn { background: #fffbe6; color: #996600; border: 1px solid #f0d870; }
+  .alert-ok   { background: #f0faf3; color: #1e7a3a; border: 1px solid #a8d8b0; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-3);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* ── HIDDEN ──────────────────────────────── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  @media (max-width: 580px) {
+    header { padding: 0 20px; height: 60px; }
+    .container { padding: 24px 16px 60px; }
+    .tab { padding: 10px 14px; font-size: 0.82rem; }
+    .rules-grid { grid-template-columns: 1fr; }
+    .match-teams { gap: 4px; }
+    .logo-svg { height: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <svg class="logo-svg" viewBox="0 0 430 90" xmlns="http://www.w3.org/2000/svg" aria-label="Tennis Oberperfuss">
+    <circle cx="45" cy="45" r="39" fill="#d4e000"/>
+    <path d="M15 26 Q42 45 15 64" fill="none" stroke="#2a2a2a" stroke-width="4" stroke-linecap="round"/>
+    <path d="M75 26 Q48 45 75 64" fill="none" stroke="#2a2a2a" stroke-width="4" stroke-linecap="round"/>
+    <line x1="102" y1="10" x2="102" y2="80" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="118" y="44" font-family="'Inter', Arial, sans-serif" font-weight="800" font-size="36" fill="#1a1a1a" letter-spacing="1">TENNIS</text>
+    <text x="118" y="76" font-family="'Inter', Arial, sans-serif" font-weight="600" font-size="22" fill="#1a1a1a" letter-spacing="3">OBERPERFUSS</text>
+  </svg>
+  <span class="header-pill">Spaß-Turnier</span>
+</header>
+
+<!-- MAIN -->
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('setup',this)">Spieler</button>
+    <button class="tab" onclick="showTab('rounds',this)">Runden</button>
+    <button class="tab" onclick="showTab('ranking',this)">Rangliste</button>
+    <button class="tab" onclick="showTab('rules',this)">Regeln</button>
+  </div>
+
+  <!-- SETUP -->
+  <div id="tab-setup" class="page active">
+
+    <div class="card">
+      <div class="section-title">Spielerinnen &amp; Spieler</div>
+      <div class="input-row">
+        <input type="text" id="playerInput" placeholder="Name eingeben…" onkeydown="if(event.key==='Enter')addPlayer()">
+        <button class="btn-primary" onclick="addPlayer()">Hinzufügen</button>
+      </div>
+      <div class="helper">Oder Textdatei importieren (ein Name pro Zeile):
+        <label style="cursor:pointer;font-weight:600;color:var(--ink-2);text-decoration:underline;text-underline-offset:2px">
+          Datei wählen
+          <input type="file" accept=".txt" onchange="importFromFile(event)" style="display:none">
+        </label>
+        <span id="importFileName" style="color:var(--ink-3)"></span>
+      </div>
+      <div class="players-wrap" id="playersList"></div>
+      <div id="playerAlert"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Einstellungen</div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:.82rem;font-weight:500;color:var(--ink-2);display:block;margin-bottom:6px">Punkte pro Spiel</label>
+        <input type="number" id="pointsPerGame" value="10" min="5" max="21" style="max-width:100px">
+      </div>
+      <div class="preview-box" id="roundsPreview"></div>
+      <button class="btn-yellow btn-full" onclick="generateTournament()">Turnier auslosen</button>
+      <div id="setupAlert"></div>
+      <div style="margin-top:16px;display:flex;justify-content:flex-end">
+        <button class="btn-danger" onclick="resetAll()">Turnier zurücksetzen</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROUNDS -->
+  <div id="tab-rounds" class="page">
+    <div id="roundsContainer">
+      <div class="empty-state">Noch keine Runden generiert.<br>Gehe zu <strong>Spieler</strong> und starte das Turnier.</div>
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div id="tab-ranking" class="page">
+    <div class="card">
+      <div class="section-title">Rangliste</div>
+      <div id="rankingContainer" class="empty-state">Noch keine Ergebnisse eingetragen.</div>
+    </div>
+  </div>
+
+  <!-- RULES -->
+  <div id="tab-rules" class="page">
+    <div class="card">
+      <div class="section-title">Spielregeln</div>
+      <div class="rules-grid">
+        <div class="rule-box">
+          <div class="rule-n">Regel 01</div>
+          <div class="rule-t">Auslosung</div>
+          <div class="rule-d">Partner und Gegner werden jede Runde neu ausgelost. Jede Person soll möglichst mit allen anderen gespielt haben.</div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-n">Regel 02</div>
+          <div class="rule-t">Aufschlag</div>
+          <div class="rule-d">Service von "unten" – diagonal einspielen. Reihenfolge: A → B → C → D → wiederholen.</div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-n">Regel 03</div>
+          <div class="rule-t">Spielmodus</div>
+          <div class="rule-d">Gespielt wird bis 10 Punkte. Kein Einstand – wer zuerst 10 hat, gewinnt.</div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-n">Regel 04</div>
+          <div class="rule-t">Wertung</div>
+          <div class="rule-d">Gewinner: 10 Punkte. Verlierer: ihre erzielten Bälle. So zählt jeder Punkt!</div>
+        </div>
+      </div>
+      <div class="info-strip">
+        <strong>Geist des Turniers</strong>
+        Spaß, Kennenlernen und ein guter Start in die Saison. Kein Stress – einfach Bälle und gute Laune. 🎾
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let players=[], rounds=[], scores={}, pointsPerGame=10;
+
+function saveState(){localStorage.setItem('tt',JSON.stringify({players,rounds,scores,pointsPerGame}));}
+function loadState(){
+  try{const s=JSON.parse(localStorage.getItem('tt')||'null');if(!s)return;
+    players=s.players||[];rounds=s.rounds||[];scores=s.scores||{};pointsPerGame=s.pointsPerGame||10;
+    document.getElementById('pointsPerGame').value=pointsPerGame;
+  }catch(e){}
+}
+
+function resetAll(){
+  if(!confirm('Turnier wirklich zurücksetzen?'))return;
+  players=[];rounds=[];scores={};pointsPerGame=10;
+  document.getElementById('pointsPerGame').value=10;
+  localStorage.removeItem('tt');
+  renderPlayers();updateRoundsPreview();
+  document.getElementById('roundsContainer').innerHTML='<div class="empty-state">Noch keine Runden generiert.<br>Gehe zu <strong>Spieler</strong> und starte das Turnier.</div>';
+  renderRanking();
+}
+
+function calcRounds(n){return n<4?0:Math.max(3,Math.ceil((n-1)/3));}
+
+function updateRoundsPreview(){
+  const el=document.getElementById('roundsPreview'),n=players.length;
+  if(n<4){el.textContent=n===0?'Noch keine Spieler eingetragen.':`${n} Spieler – mindestens 4 benötigt.`;return;}
+  const r=calcRounds(n),c=Math.floor(n/4),b=n%4;
+  el.innerHTML=`<strong>${n} Spieler</strong> → <strong>${r} Runden</strong> (${c} Platz${c>1?'ätze':''}${b?`, ${b} Pause${b>1?'n':''}`:''})`;
+}
+
+function showTab(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='ranking')renderRanking();
+}
+
+function addPlayer(){
+  const inp=document.getElementById('playerInput'),name=inp.value.trim();
+  if(!name)return;
+  if(players.includes(name)){showAlert('playerAlert','Dieser Name existiert bereits.','warn');return;}
+  players.push(name);inp.value='';renderPlayers();updateRoundsPreview();saveState();
+}
+
+function removePlayer(i){players.splice(i,1);renderPlayers();updateRoundsPreview();saveState();}
+
+function renderPlayers(){
+  const w=document.getElementById('playersList');
+  if(!players.length){w.innerHTML='<span style="font-size:.82rem;color:var(--ink-3)">Noch keine Spieler hinzugefügt.</span>';return;}
+  w.innerHTML=players.map((p,i)=>`<span class="chip">${p}<button class="chip-remove" onclick="removePlayer(${i})">✕</button></span>`).join('');
+  clearAlert('playerAlert');
+}
+
+function showAlert(id,msg,type){document.getElementById(id).innerHTML=`<div class="alert alert-${type==='warn'?'warn':'ok'}">${msg}</div>`;}
+function clearAlert(id){document.getElementById(id).innerHTML='';}
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function generateTournament(){
+  if(players.length<4){showAlert('setupAlert','Mindestens 4 Spieler benötigt.','warn');return;}
+  clearAlert('setupAlert');
+  pointsPerGame=parseInt(document.getElementById('pointsPerGame').value)||10;
+  const nr=calcRounds(players.length);scores={};rounds=[];
+  const pc={},oc={},pk=(a,b)=>[a,b].sort().join('|');
+  players.forEach(p1=>players.forEach(p2=>{pc[pk(p1,p2)]=pc[pk(p1,p2)]||0;oc[pk(p1,p2)]=oc[pk(p1,p2)]||0;}));
+  for(let r=0;r<nr;r++){
+    let sh=shuffle(players),bye=[];
+    while(sh.length%4!==0)bye.push(sh.pop());
+    const matches=[];
+    for(let i=0;i<sh.length;i+=4){
+      const g=sh.slice(i,i+4);
+      const opts=[[[g[0],g[1]],[g[2],g[3]]],[[g[0],g[2]],[g[1],g[3]]],[[g[0],g[3]],[g[1],g[2]]]];
+      let best=opts[0],bs=Infinity;
+      opts.forEach(o=>{const[[a,b],[c,d]]=o;const s=(pc[pk(a,b)]||0)+(pc[pk(c,d)]||0)+(oc[pk(a,c)]||0)+(oc[pk(a,d)]||0)+(oc[pk(b,c)]||0)+(oc[pk(b,d)]||0);if(s<bs){bs=s;best=o;}});
+      const[[a,b],[c,d]]=best;
+      pc[pk(a,b)]=(pc[pk(a,b)]||0)+1;pc[pk(c,d)]=(pc[pk(c,d)]||0)+1;
+      [c,d].forEach(o=>{oc[pk(a,o)]=(oc[pk(a,o)]||0)+1;oc[pk(b,o)]=(oc[pk(b,o)]||0)+1;});
+      matches.push({id:`r${r}_m${matches.length}`,teamA:[a,b],teamB:[c,d],court:matches.length+1});
+    }
+    rounds.push({num:r+1,matches,byePlayers:bye});
+  }
+  saveState();renderRounds();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-rounds').classList.add('active');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  showAlert('setupAlert',`${nr} Runden für ${players.length} Spieler ausgelost.`,'ok');
+}
+
+function renderRounds(){
+  const container=document.getElementById('roundsContainer');
+  if(!rounds.length){container.innerHTML='<div class="empty-state">Noch keine Runden generiert.</div>';return;}
+  let html='';
+  rounds.forEach(round=>{
+    html+=`<div class="card"><div class="round-label">Runde ${round.num}</div>`;
+    round.matches.forEach((m,mi)=>{
+      const s=scores[m.id]||{},saved=s.a!==undefined&&s.b!==undefined,si=mi%4;
+      html+=`<div class="match-row">
+        <div class="court-label">Platz ${m.court}</div>
+        <div class="match-teams">
+          <div>${m.teamA.map((p,pi)=>`<div class="player-name">${p}${(pi===0&&si===0)||(pi===1&&si===1)?'<span class="serve-tag">Aufschlag</span>':''}</div>`).join('')}</div>
+          <div class="vs">VS</div>
+          <div class="team-b">${m.teamB.map((p,pi)=>`<div class="player-name">${(pi===0&&si===2)||(pi===1&&si===3)?'<span class="serve-tag">Aufschlag</span>':''}${p}</div>`).join('')}</div>
+        </div>
+        <div class="score-row">
+          <input type="number" id="score_a_${m.id}" min="0" max="${pointsPerGame}" value="${s.a??''}" placeholder="0" onchange="saveScore('${m.id}')">
+          <span class="score-colon">:</span>
+          <input type="number" id="score_b_${m.id}" min="0" max="${pointsPerGame}" value="${s.b??''}" placeholder="0" onchange="saveScore('${m.id}')">
+          <button class="btn-ghost" onclick="saveScore('${m.id}')" style="margin-left:4px;padding:7px 12px;font-size:.82rem">Speichern</button>
+          ${saved?`<span class="score-ok">✓ Gespeichert</span>`:''}
+        </div>
+        <div class="score-err" id="score_err_${m.id}"></div>
+      </div>`;
+    });
+    if(round.byePlayers?.length)
+      round.byePlayers.forEach(bp=>{html+=`<div class="bye-row">Pause: <strong>${bp}</strong></div>`;});
+    html+=`</div>`;
+  });
+  container.innerHTML=html;
+}
+
+function validateScore(a,b,pts){
+  if(a<0||b<0)return{ok:false,msg:'Punkte müssen ≥ 0 sein.'};
+  if(a===b)return{ok:false,msg:'Kein Unentschieden erlaubt.'};
+  const hi=Math.max(a,b),lo=Math.min(a,b);
+  if(hi<pts)return{ok:false,msg:`Gewinner muss ${pts} Punkte erreichen.`};
+  if(lo>=pts-1&&hi>pts&&hi-lo!==2)return{ok:false,msg:`Ab ${pts-1}:${pts-1} braucht es genau 2 Punkte Abstand.`};
+  return{ok:true};
+}
+
+function saveScore(id){
+  const a=parseInt(document.getElementById(`score_a_${id}`).value);
+  const b=parseInt(document.getElementById(`score_b_${id}`).value);
+  if(isNaN(a)||isNaN(b))return;
+  const v=validateScore(a,b,pointsPerGame),err=document.getElementById(`score_err_${id}`);
+  if(!v.ok){if(err)err.textContent=v.msg;return;}
+  if(err)err.textContent='';
+  scores[id]={a,b};saveState();renderRounds();renderRanking();
+}
+
+function renderRanking(){
+  const stats={};
+  players.forEach(p=>{stats[p]={won:0,lost:0,pf:0,pa:0,played:0};});
+  rounds.forEach(r=>r.matches.forEach(m=>{
+    const s=scores[m.id];if(!s||s.a===undefined)return;
+    const aw=s.a>s.b;
+    m.teamA.forEach(p=>{if(!stats[p])return;stats[p].played++;stats[p].pf+=s.a;stats[p].pa+=s.b;if(aw)stats[p].won++;else stats[p].lost++;});
+    m.teamB.forEach(p=>{if(!stats[p])return;stats[p].played++;stats[p].pf+=s.b;stats[p].pa+=s.a;if(!aw)stats[p].won++;else stats[p].lost++;});
+  }));
+  const ranked=Object.entries(stats)
+    .map(([name,s])=>({name,...s,ratio:s.played>0?(s.pf/Math.max(s.pa,1)):0}))
+    .sort((a,b)=>b.won-a.won||b.pf-a.pf||b.ratio-a.ratio);
+  const c=document.getElementById('rankingContainer');if(!c)return;
+  if(ranked.every(r=>r.played===0)){c.innerHTML='<div class="empty-state">Noch keine Ergebnisse eingetragen.</div>';return;}
+  let html=`<table><thead><tr><th>#</th><th>Name</th><th>Siege</th><th>Spiele</th><th>Punkte</th><th>Ratio</th></tr></thead><tbody>`;
+  ranked.forEach((r,i)=>{
+    const m=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+    html+=`<tr class="rank-${i+1}"><td class="rank-pos">${m}</td><td><strong>${r.name}</strong></td><td>${r.won}</td><td>${r.played}</td><td class="pts">${r.pf}</td><td class="ratio-col">${r.ratio.toFixed(2)}</td></tr>`;
+  });
+  html+=`</tbody></table>`;c.innerHTML=html;
+}
+
+function importFromFile(e){
+  const f=e.target.files[0];if(!f)return;
+  document.getElementById('importFileName').textContent=' — '+f.name;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const lines=ev.target.result.split(/\r?\n/);let added=0,sk=0;
+    lines.forEach(l=>{const n=l.trim();if(!n)return;if(players.includes(n)){sk++;return;}players.push(n);added++;});
+    renderPlayers();updateRoundsPreview();saveState();
+    showAlert('playerAlert',sk>0?`${added} importiert, ${sk} Duplikate übersprungen.`:`${added} Spieler aus "${f.name}" importiert.`,'ok');
+  };
+  r.readAsText(f,'UTF-8');e.target.value='';
+}
+
+loadState();renderPlayers();updateRoundsPreview();
+if(rounds.length>0)renderRounds();renderRanking();
+</script>
+</body>
+</html>
