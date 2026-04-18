@@ -503,7 +503,13 @@
     <text x="118" y="44" font-family="'Inter', Arial, sans-serif" font-weight="800" font-size="36" fill="#1a1a1a" letter-spacing="1">TENNIS</text>
     <text x="118" y="76" font-family="'Inter', Arial, sans-serif" font-weight="600" font-size="22" fill="#1a1a1a" letter-spacing="3">OBERPERFUSS</text>
   </svg>
-  <span class="header-pill">Spaß-Turnier</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <span id="syncStatus" style="display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:100px;background:#eee;color:#666">
+      <span id="syncDot" style="width:6px;height:6px;border-radius:50%;background:#999"></span>
+      <span id="syncText">Lädt…</span>
+    </span>
+    <span class="header-pill" style="margin-left:0">Spaß-Turnier</span>
+  </div>
 </header>
 
 <!-- MAIN -->
@@ -560,7 +566,7 @@
 
     <div class="card">
       <div class="section-title">Sicherung</div>
-      <div class="helper">Daten bleiben im Browser gespeichert. <strong>Lade zusätzlich nach jeder Runde ein Backup herunter</strong> – falls der Browser-Cache gelöscht wird oder der Laptop abstürzt.</div>
+      <div class="helper">Der Stand wird automatisch am Server gespeichert (siehe Status oben rechts). Ein zusätzliches Backup als Datei schadet nie – besonders praktisch, wenn der Server gerade nicht erreichbar ist.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn-primary" onclick="exportData()">⬇ Backup herunterladen</button>
         <label class="btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center">
@@ -579,6 +585,7 @@
     <div id="roundsBackupBar" style="display:none;justify-content:flex-end;margin-bottom:12px">
       <button class="btn-ghost" onclick="exportData()" style="font-size:.82rem;padding:7px 12px">⬇ Backup herunterladen</button>
     </div>
+    <div id="roundsInfo" class="preview-box" style="display:none;margin-bottom:12px"></div>
     <div id="roundsContainer">
       <div class="empty-state">Noch keine Runden generiert.<br>Gehe zu <strong>Spieler</strong> und starte das Turnier.</div>
     </div>
@@ -629,15 +636,88 @@
 
 <script>
 let players=[], rounds=[], scores={}, pointsPerGame=10, courts=1, gamesPerPlayer=3;
+let lastUpdatedAt=0, pendingSaves=0;
 
-function saveState(){localStorage.setItem('tt',JSON.stringify({players,rounds,scores,pointsPerGame,courts,gamesPerPlayer}));}
-function loadState(){
-  try{const s=JSON.parse(localStorage.getItem('tt')||'null');if(!s)return;
-    players=s.players||[];rounds=s.rounds||[];scores=s.scores||{};pointsPerGame=s.pointsPerGame||10;courts=s.courts||1;gamesPerPlayer=s.gamesPerPlayer||3;
-    document.getElementById('pointsPerGame').value=pointsPerGame;
-    document.getElementById('courts').value=courts;
-    document.getElementById('gamesPerPlayer').value=gamesPerPlayer;
-  }catch(e){}
+function setSyncStatus(s){
+  const dot=document.getElementById('syncDot'),txt=document.getElementById('syncText'),box=document.getElementById('syncStatus');
+  if(!dot||!txt||!box)return;
+  const styles={
+    ok:{bg:'#e8f7ec',color:'#1e7a3a',dot:'#2e9e4f',label:'Live'},
+    pending:{bg:'#fff8d9',color:'#7a5a00',dot:'#d4a000',label:'Speichere…'},
+    offline:{bg:'#fdecec',color:'#a02828',dot:'#d94040',label:'Offline'},
+    loading:{bg:'#eee',color:'#666',dot:'#999',label:'Lädt…'}
+  };
+  const x=styles[s]||styles.loading;
+  box.style.background=x.bg;box.style.color=x.color;dot.style.background=x.dot;txt.textContent=x.label;
+}
+
+function applyState(s){
+  players=s.players||[];rounds=s.rounds||[];scores=s.scores||{};
+  pointsPerGame=s.pointsPerGame||10;courts=s.courts||1;gamesPerPlayer=s.gamesPerPlayer||3;
+  const ppg=document.getElementById('pointsPerGame');if(ppg)ppg.value=pointsPerGame;
+  const c=document.getElementById('courts');if(c)c.value=courts;
+  const g=document.getElementById('gamesPerPlayer');if(g)g.value=gamesPerPlayer;
+}
+
+function writeLocalMirror(){
+  try{localStorage.setItem('tt',JSON.stringify({players,rounds,scores,pointsPerGame,courts,gamesPerPlayer}));}catch(e){}
+}
+
+async function apiGet(){
+  const r=await fetch('/api/state',{cache:'no-store'});
+  if(!r.ok)throw new Error('http '+r.status);
+  return await r.json();
+}
+async function apiPutState(){
+  const r=await fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({players,rounds,scores,pointsPerGame,courts,gamesPerPlayer})});
+  if(!r.ok)throw new Error('http '+r.status);
+  return await r.json();
+}
+async function apiPostScore(matchId,a,b){
+  const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({matchId,a,b})});
+  if(!r.ok)throw new Error('http '+r.status);
+  return await r.json();
+}
+
+function saveState(){
+  writeLocalMirror();
+  pendingSaves++;setSyncStatus('pending');
+  apiPutState()
+    .then(r=>{lastUpdatedAt=r.updatedAt;setSyncStatus('ok');})
+    .catch(err=>{console.warn('saveState failed:',err.message);setSyncStatus('offline');})
+    .finally(()=>{pendingSaves--;});
+}
+
+async function loadState(){
+  try{
+    const s=await apiGet();applyState(s);lastUpdatedAt=s.updatedAt||0;writeLocalMirror();setSyncStatus('ok');
+    return true;
+  }catch(err){
+    console.warn('Server nicht erreichbar, nutze localStorage:',err.message);
+    try{const s=JSON.parse(localStorage.getItem('tt')||'null');if(s)applyState(s);}catch(e){}
+    setSyncStatus('offline');
+    return false;
+  }
+}
+
+function isUserEditing(){
+  const a=document.activeElement;
+  return a&&a.tagName==='INPUT';
+}
+
+async function pollState(){
+  if(pendingSaves>0)return;
+  try{
+    const s=await apiGet();
+    if((s.updatedAt||0)>lastUpdatedAt){
+      if(isUserEditing()){setSyncStatus('ok');return;}
+      applyState(s);lastUpdatedAt=s.updatedAt;writeLocalMirror();
+      renderPlayers();updateRoundsPreview();renderRounds();renderRanking();
+    }
+    setSyncStatus('ok');
+  }catch(err){setSyncStatus('offline');}
 }
 
 function resetAll(){
@@ -646,7 +726,7 @@ function resetAll(){
   document.getElementById('pointsPerGame').value=10;
   document.getElementById('courts').value=1;
   document.getElementById('gamesPerPlayer').value=3;
-  localStorage.removeItem('tt');
+  saveState();
   renderPlayers();updateRoundsPreview();
   document.getElementById('roundsContainer').innerHTML='<div class="empty-state">Noch keine Runden generiert.<br>Gehe zu <strong>Spieler</strong> und starte das Turnier.</div>';
   document.getElementById('roundsBackupBar').style.display='none';
@@ -741,7 +821,21 @@ function generateTournament(){
 function renderRounds(){
   const container=document.getElementById('roundsContainer');
   const bar=document.getElementById('roundsBackupBar');
+  const info=document.getElementById('roundsInfo');
   if(bar)bar.style.display=rounds.length?'flex':'none';
+  if(info){
+    if(!rounds.length){info.style.display='none';info.innerHTML='';}
+    else{
+      const planned={};
+      players.forEach(p=>planned[p]=0);
+      rounds.forEach(r=>r.matches.forEach(m=>[...m.teamA,...m.teamB].forEach(p=>{if(planned[p]!==undefined)planned[p]++;})));
+      const counts=Object.values(planned),min=Math.min(...counts),max=Math.max(...counts);
+      const list=Object.entries(planned).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).map(([p,c])=>`<span style="white-space:nowrap">${p}: <strong>${c}</strong></span>`).join(' · ');
+      const head=min===max?`Jeder Spieler hat <strong>${min} ${min===1?'Spiel':'Spiele'}</strong> ✓`:`Spiele pro Person: <strong>${min}–${max}</strong>`;
+      info.innerHTML=`<div style="margin-bottom:6px">${head}</div><div style="font-size:.8rem;line-height:1.8">${list}</div>`;
+      info.style.display='block';
+    }
+  }
   if(!rounds.length){container.innerHTML='<div class="empty-state">Noch keine Runden generiert.</div>';return;}
   let html='';
   rounds.forEach(round=>{
@@ -789,7 +883,13 @@ function saveScore(id){
   const v=validateScore(a,b,pointsPerGame),err=document.getElementById(`score_err_${id}`);
   if(!v.ok){if(err)err.textContent=v.msg;return;}
   if(err)err.textContent='';
-  scores[id]={a,b};saveState();renderRounds();renderRanking();
+  scores[id]={a,b};writeLocalMirror();
+  pendingSaves++;setSyncStatus('pending');
+  apiPostScore(id,a,b)
+    .then(r=>{lastUpdatedAt=r.updatedAt;setSyncStatus('ok');})
+    .catch(err=>{console.warn('saveScore failed:',err.message);setSyncStatus('offline');})
+    .finally(()=>{pendingSaves--;});
+  renderRounds();renderRanking();
 }
 
 function renderRanking(){
@@ -848,7 +948,7 @@ function importData(e){
 }
 
 window.addEventListener('beforeunload',e=>{
-  if(rounds.length>0){e.preventDefault();e.returnValue='';return '';}
+  if(pendingSaves>0){e.preventDefault();e.returnValue='';}
 });
 
 function importFromFile(e){
@@ -864,8 +964,12 @@ function importFromFile(e){
   r.readAsText(f,'UTF-8');e.target.value='';
 }
 
-loadState();renderPlayers();updateRoundsPreview();
-if(rounds.length>0)renderRounds();renderRanking();
+(async function init(){
+  setSyncStatus('loading');
+  await loadState();
+  renderPlayers();updateRoundsPreview();renderRounds();renderRanking();
+  setInterval(pollState,5000);
+})();
 </script>
 </body>
 </html>
