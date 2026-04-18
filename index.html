@@ -538,22 +538,47 @@
 
     <div class="card">
       <div class="section-title">Einstellungen</div>
-      <div style="margin-bottom:14px">
-        <label style="font-size:.82rem;font-weight:500;color:var(--ink-2);display:block;margin-bottom:6px">Punkte pro Spiel</label>
-        <input type="number" id="pointsPerGame" value="10" min="5" max="21" style="max-width:100px">
+      <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+        <div>
+          <label style="font-size:.82rem;font-weight:500;color:var(--ink-2);display:block;margin-bottom:6px">Punkte pro Spiel</label>
+          <input type="number" id="pointsPerGame" value="10" min="5" max="21" style="max-width:100px">
+        </div>
+        <div>
+          <label style="font-size:.82rem;font-weight:500;color:var(--ink-2);display:block;margin-bottom:6px">Plätze verfügbar</label>
+          <input type="number" id="courts" value="1" min="1" max="20" style="max-width:100px" oninput="updateRoundsPreview()">
+        </div>
+        <div>
+          <label style="font-size:.82rem;font-weight:500;color:var(--ink-2);display:block;margin-bottom:6px">Spiele pro Person</label>
+          <input type="number" id="gamesPerPlayer" value="3" min="1" max="30" style="max-width:100px" oninput="updateRoundsPreview()">
+          <div id="gamesHint" style="font-size:.74rem;color:var(--ink-3);margin-top:4px"></div>
+        </div>
       </div>
       <div class="preview-box" id="roundsPreview"></div>
       <button class="btn-yellow btn-full" onclick="generateTournament()">Turnier auslosen</button>
       <div id="setupAlert"></div>
-      <div style="margin-top:16px;display:flex;justify-content:flex-end">
-        <button class="btn-danger" onclick="resetAll()">Turnier zurücksetzen</button>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Sicherung</div>
+      <div class="helper">Daten bleiben im Browser gespeichert. <strong>Lade zusätzlich nach jeder Runde ein Backup herunter</strong> – falls der Browser-Cache gelöscht wird oder der Laptop abstürzt.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="exportData()">⬇ Backup herunterladen</button>
+        <label class="btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center">
+          ⬆ Backup laden
+          <input type="file" accept=".json,application/json" onchange="importData(event)" style="display:none">
+        </label>
+        <button class="btn-danger" onclick="resetAll()" style="margin-left:auto">Turnier zurücksetzen</button>
       </div>
+      <div id="backupAlert"></div>
     </div>
 
   </div>
 
   <!-- ROUNDS -->
   <div id="tab-rounds" class="page">
+    <div id="roundsBackupBar" style="display:none;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn-ghost" onclick="exportData()" style="font-size:.82rem;padding:7px 12px">⬇ Backup herunterladen</button>
+    </div>
     <div id="roundsContainer">
       <div class="empty-state">Noch keine Runden generiert.<br>Gehe zu <strong>Spieler</strong> und starte das Turnier.</div>
     </div>
@@ -603,33 +628,49 @@
 </div>
 
 <script>
-let players=[], rounds=[], scores={}, pointsPerGame=10;
+let players=[], rounds=[], scores={}, pointsPerGame=10, courts=1, gamesPerPlayer=3;
 
-function saveState(){localStorage.setItem('tt',JSON.stringify({players,rounds,scores,pointsPerGame}));}
+function saveState(){localStorage.setItem('tt',JSON.stringify({players,rounds,scores,pointsPerGame,courts,gamesPerPlayer}));}
 function loadState(){
   try{const s=JSON.parse(localStorage.getItem('tt')||'null');if(!s)return;
-    players=s.players||[];rounds=s.rounds||[];scores=s.scores||{};pointsPerGame=s.pointsPerGame||10;
+    players=s.players||[];rounds=s.rounds||[];scores=s.scores||{};pointsPerGame=s.pointsPerGame||10;courts=s.courts||1;gamesPerPlayer=s.gamesPerPlayer||3;
     document.getElementById('pointsPerGame').value=pointsPerGame;
+    document.getElementById('courts').value=courts;
+    document.getElementById('gamesPerPlayer').value=gamesPerPlayer;
   }catch(e){}
 }
 
 function resetAll(){
   if(!confirm('Turnier wirklich zurücksetzen?'))return;
-  players=[];rounds=[];scores={};pointsPerGame=10;
+  players=[];rounds=[];scores={};pointsPerGame=10;courts=1;gamesPerPlayer=3;
   document.getElementById('pointsPerGame').value=10;
+  document.getElementById('courts').value=1;
+  document.getElementById('gamesPerPlayer').value=3;
   localStorage.removeItem('tt');
   renderPlayers();updateRoundsPreview();
   document.getElementById('roundsContainer').innerHTML='<div class="empty-state">Noch keine Runden generiert.<br>Gehe zu <strong>Spieler</strong> und starte das Turnier.</div>';
+  document.getElementById('roundsBackupBar').style.display='none';
   renderRanking();
 }
 
 function calcRounds(n){return n<4?0:Math.max(3,Math.ceil((n-1)/3));}
 
+function effectiveCourts(n){
+  const max=Math.floor(n/4);
+  const input=parseInt(document.getElementById('courts').value)||1;
+  return Math.max(1,Math.min(input,max));
+}
+function effectiveGames(){
+  return Math.max(1,parseInt(document.getElementById('gamesPerPlayer').value)||3);
+}
+
 function updateRoundsPreview(){
   const el=document.getElementById('roundsPreview'),n=players.length;
+  const hint=document.getElementById('gamesHint');
+  if(hint)hint.textContent=n>=4?`Vorschlag: ${calcRounds(n)}`:'';
   if(n<4){el.textContent=n===0?'Noch keine Spieler eingetragen.':`${n} Spieler – mindestens 4 benötigt.`;return;}
-  const r=calcRounds(n),c=Math.floor(n/4),b=n%4;
-  el.innerHTML=`<strong>${n} Spieler</strong> → <strong>${r} Runden</strong> (${c} Platz${c>1?'ätze':''}${b?`, ${b} Pause${b>1?'n':''}`:''})`;
+  const c=effectiveCourts(n),b=n-4*c,g=effectiveGames(),r=Math.ceil(n*g/(4*c));
+  el.innerHTML=`<strong>${n} Spieler</strong> → <strong>${r} Runden</strong> (${c===1?'1 Platz':`${c} Plätze`}${b?`, ${b} ${b>1?'Pausen':'Pause'} pro Runde`:''}) · ${g} Spiele pro Person`;
 }
 
 function showTab(name,btn){
@@ -665,21 +706,26 @@ function generateTournament(){
   if(players.length<4){showAlert('setupAlert','Mindestens 4 Spieler benötigt.','warn');return;}
   clearAlert('setupAlert');
   pointsPerGame=parseInt(document.getElementById('pointsPerGame').value)||10;
-  const nr=calcRounds(players.length);scores={};rounds=[];
-  const pc={},oc={},pk=(a,b)=>[a,b].sort().join('|');
-  players.forEach(p1=>players.forEach(p2=>{pc[pk(p1,p2)]=pc[pk(p1,p2)]||0;oc[pk(p1,p2)]=oc[pk(p1,p2)]||0;}));
+  courts=effectiveCourts(players.length);
+  gamesPerPlayer=effectiveGames();
+  const nr=Math.ceil(players.length*gamesPerPlayer/(4*courts)),playersPerRound=4*courts;
+  scores={};rounds=[];
+  const pc={},oc={},gp={},pk=(a,b)=>[a,b].sort().join('|');
+  players.forEach(p=>{gp[p]=0;players.forEach(q=>{pc[pk(p,q)]=0;oc[pk(p,q)]=0;});});
   for(let r=0;r<nr;r++){
-    let sh=shuffle(players),bye=[];
-    while(sh.length%4!==0)bye.push(sh.pop());
+    const sorted=[...players].sort((a,b)=>gp[a]-gp[b]||Math.random()-0.5);
+    const playing=shuffle(sorted.slice(0,playersPerRound));
+    const bye=sorted.slice(playersPerRound);
     const matches=[];
-    for(let i=0;i<sh.length;i+=4){
-      const g=sh.slice(i,i+4);
+    for(let i=0;i<playing.length;i+=4){
+      const g=playing.slice(i,i+4);
       const opts=[[[g[0],g[1]],[g[2],g[3]]],[[g[0],g[2]],[g[1],g[3]]],[[g[0],g[3]],[g[1],g[2]]]];
       let best=opts[0],bs=Infinity;
       opts.forEach(o=>{const[[a,b],[c,d]]=o;const s=(pc[pk(a,b)]||0)+(pc[pk(c,d)]||0)+(oc[pk(a,c)]||0)+(oc[pk(a,d)]||0)+(oc[pk(b,c)]||0)+(oc[pk(b,d)]||0);if(s<bs){bs=s;best=o;}});
       const[[a,b],[c,d]]=best;
-      pc[pk(a,b)]=(pc[pk(a,b)]||0)+1;pc[pk(c,d)]=(pc[pk(c,d)]||0)+1;
-      [c,d].forEach(o=>{oc[pk(a,o)]=(oc[pk(a,o)]||0)+1;oc[pk(b,o)]=(oc[pk(b,o)]||0)+1;});
+      pc[pk(a,b)]++;pc[pk(c,d)]++;
+      [c,d].forEach(o=>{oc[pk(a,o)]++;oc[pk(b,o)]++;});
+      [a,b,c,d].forEach(p=>gp[p]++);
       matches.push({id:`r${r}_m${matches.length}`,teamA:[a,b],teamB:[c,d],court:matches.length+1});
     }
     rounds.push({num:r+1,matches,byePlayers:bye});
@@ -689,11 +735,13 @@ function generateTournament(){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-rounds').classList.add('active');
   document.querySelectorAll('.tab')[1].classList.add('active');
-  showAlert('setupAlert',`${nr} Runden für ${players.length} Spieler ausgelost.`,'ok');
+  showAlert('setupAlert',`${nr} Runden für ${players.length} Spieler auf ${courts===1?'1 Platz':courts+' Plätzen'} ausgelost.`,'ok');
 }
 
 function renderRounds(){
   const container=document.getElementById('roundsContainer');
+  const bar=document.getElementById('roundsBackupBar');
+  if(bar)bar.style.display=rounds.length?'flex':'none';
   if(!rounds.length){container.innerHTML='<div class="empty-state">Noch keine Runden generiert.</div>';return;}
   let html='';
   rounds.forEach(round=>{
@@ -717,7 +765,7 @@ function renderRounds(){
         <div class="score-err" id="score_err_${m.id}"></div>
       </div>`;
     });
-    if(round.byePlayers?.length)
+    if(round.byePlayers?.length&&round.matches.length>1)
       round.byePlayers.forEach(bp=>{html+=`<div class="bye-row">Pause: <strong>${bp}</strong></div>`;});
     html+=`</div>`;
   });
@@ -728,8 +776,8 @@ function validateScore(a,b,pts){
   if(a<0||b<0)return{ok:false,msg:'Punkte müssen ≥ 0 sein.'};
   if(a===b)return{ok:false,msg:'Kein Unentschieden erlaubt.'};
   const hi=Math.max(a,b),lo=Math.min(a,b);
-  if(hi<pts)return{ok:false,msg:`Gewinner muss ${pts} Punkte erreichen.`};
-  if(lo>=pts-1&&hi>pts&&hi-lo!==2)return{ok:false,msg:`Ab ${pts-1}:${pts-1} braucht es genau 2 Punkte Abstand.`};
+  if(hi!==pts)return{ok:false,msg:`Gewinner muss genau ${pts} Punkte haben (kein Einstand).`};
+  if(lo>=pts)return{ok:false,msg:`Verlierer muss weniger als ${pts} Punkte haben.`};
   return{ok:true};
 }
 
@@ -764,6 +812,43 @@ function renderRanking(){
   });
   html+=`</tbody></table>`;c.innerHTML=html;
 }
+
+function exportData(){
+  const data={players,rounds,scores,pointsPerGame,courts,exportedAt:new Date().toISOString(),version:1};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  a.href=url;
+  a.download=`tennis-turnier-backup-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showAlert('backupAlert','Backup heruntergeladen. Bewahre die Datei sicher auf!','ok');
+}
+
+function importData(e){
+  const f=e.target.files[0];if(!f){return;}
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d||!Array.isArray(d.players)){showAlert('backupAlert','Ungültige Backup-Datei.','warn');return;}
+      const nPlayers=d.players.length,nRounds=(d.rounds||[]).length,nScores=Object.keys(d.scores||{}).length;
+      if(!confirm(`Backup laden und aktuellen Stand überschreiben?\n\n${nPlayers} Spieler, ${nRounds} Runden, ${nScores} Ergebnisse`))return;
+      players=d.players||[];rounds=d.rounds||[];scores=d.scores||{};
+      pointsPerGame=d.pointsPerGame||10;courts=d.courts||1;
+      document.getElementById('pointsPerGame').value=pointsPerGame;
+      document.getElementById('courts').value=courts;
+      saveState();renderPlayers();updateRoundsPreview();renderRounds();renderRanking();
+      showAlert('backupAlert',`Backup geladen: ${nPlayers} Spieler, ${nRounds} Runden, ${nScores} Ergebnisse.`,'ok');
+    }catch(err){showAlert('backupAlert','Datei konnte nicht gelesen werden.','warn');}
+  };
+  r.readAsText(f,'UTF-8');e.target.value='';
+}
+
+window.addEventListener('beforeunload',e=>{
+  if(rounds.length>0){e.preventDefault();e.returnValue='';return '';}
+});
 
 function importFromFile(e){
   const f=e.target.files[0];if(!f)return;
