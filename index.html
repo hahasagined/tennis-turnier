@@ -756,9 +756,9 @@ function renderRounds(){
           <div class="team-b">${m.teamB.map((p,pi)=>`<div class="player-name">${(pi===0&&si===2)||(pi===1&&si===3)?'<span class="serve-tag">Aufschlag</span>':''}${p}</div>`).join('')}</div>
         </div>
         <div class="score-row">
-          <input type="number" id="score_a_${m.id}" min="0" max="${pointsPerGame}" value="${s.a??''}" placeholder="0" onchange="saveScore('${m.id}')">
+          <input type="number" id="score_a_${m.id}" min="0" value="${s.a??''}" placeholder="0" onchange="saveScore('${m.id}')">
           <span class="score-colon">:</span>
-          <input type="number" id="score_b_${m.id}" min="0" max="${pointsPerGame}" value="${s.b??''}" placeholder="0" onchange="saveScore('${m.id}')">
+          <input type="number" id="score_b_${m.id}" min="0" value="${s.b??''}" placeholder="0" onchange="saveScore('${m.id}')">
           <button class="btn-ghost" onclick="saveScore('${m.id}')" style="margin-left:4px;padding:7px 12px;font-size:.82rem">Speichern</button>
           ${saved?`<span class="score-ok">✓ Gespeichert</span>`:''}
         </div>
@@ -776,8 +776,9 @@ function validateScore(a,b,pts){
   if(a<0||b<0)return{ok:false,msg:'Punkte müssen ≥ 0 sein.'};
   if(a===b)return{ok:false,msg:'Kein Unentschieden erlaubt.'};
   const hi=Math.max(a,b),lo=Math.min(a,b);
-  if(hi!==pts)return{ok:false,msg:`Gewinner muss genau ${pts} Punkte haben (kein Einstand).`};
-  if(lo>=pts)return{ok:false,msg:`Verlierer muss weniger als ${pts} Punkte haben.`};
+  if(hi<pts)return{ok:false,msg:`Gewinner braucht mindestens ${pts} Punkte.`};
+  if(hi-lo<2)return{ok:false,msg:'Gewinner muss 2 Punkte Abstand haben.'};
+  if(hi>pts&&hi-lo>2)return{ok:false,msg:`Ab ${pts-1}:${pts-1} gewinnt man mit genau 2 Punkten Abstand.`};
   return{ok:true};
 }
 
